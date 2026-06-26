@@ -2,59 +2,52 @@ import streamlit as st
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 
-st.set_page_config(page_title="Ticket Classifier", page_icon="🎫", layout="wide")
+st.set_page_config(page_title="Ticket Classifier", page_icon="🎫", layout="centered")
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
-html, body, [class*="st-"] {font-family: 'Poppins', sans-serif;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 .stApp {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background-attachment: fixed;
+    background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    font-family: 'Inter', sans-serif;
 }
-.glass {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    padding: 2rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+.glass-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
 }
-h1, h2, h3, p, label {color: #ffffff !important;}
-.stTextArea textarea, .stTextInput input {
-    background: rgba(255, 255, 255, 0.15) !important;
-    border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    color: white !important;
+h1, h3, p, label, div[data-testid="stMarkdownContainer"] {color: #e2e8f0 !important;}
+.stTextArea textarea {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #f8fafc !important;
     border-radius: 12px !important;
 }
 .stButton>button {
-    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+    background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
     color: white;
     border: none;
-    border-radius: 12px;
-    padding: 0.6rem 1.5rem;
+    border-radius: 10px;
     font-weight: 600;
     width: 100%;
-    transition: all 0.3s ease;
+    padding: 0.6rem;
 }
-.stButton>button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
-}
+.stButton>button:hover {filter: brightness(1.1);}
 .badge {
     display: inline-block;
-    padding: 0.4rem 1rem;
+    padding: 4px 12px;
     border-radius: 999px;
     font-weight: 600;
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    margin-top: 8px;
 }
-.billing {background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%); color: #0f172a;}
-.technical {background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); color: #0f172a;}
-.account {background: linear-gradient(90deg, #fa709a 0%, #fee140 100%); color: #0f172a;}
-.general {background: linear-gradient(90deg, #a18cd1 0%, #fbc2eb 100%); color: #0f172a;}
+.billing {background: #10b981; color: #0f172a;}
+.technical {background: #38bdf8; color: #0f172a;}
+.account {background: #f59e0b; color: #0f172a;}
+.general {background: #a855f7; color: #ffffff;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -68,10 +61,11 @@ def get_llm():
 
 llm = get_llm()
 
-prompt_template = PromptTemplate(
+template = PromptTemplate(
     input_variables=["ticket"],
-    template="""Classify into one category only. Return only the name.
+    template="""Classify into exactly one category. Return only the category name.
 Categories: Billing, Technical Issue, Account Access, General Inquiry
+Rules: Password, Login, Hacked, Suspicious Activity = Account Access
 Ticket: {ticket}
 Category:"""
 )
@@ -89,48 +83,37 @@ TICKETS = [
     "I'm interested in your services but have some questions about features before signing up."
 ]
 
-COLOR_MAP = {
+BADGE_CLASS = {
     "Billing": "billing",
     "Technical Issue": "technical", 
     "Account Access": "account",
     "General Inquiry": "general"
 }
 
-st.markdown('<div class="glass">', unsafe_allow_html=True)
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
 st.title("🎫 Support Ticket Classifier")
-st.write("Classify any support ticket instantly using Llama 3.1 on Groq.")
+st.caption("AI-powered classification using Llama 3.1 on Groq")
 st.markdown('</div>', unsafe_allow_html=True)
 
-col1, col2 = st.columns([1.2, 1])
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+user_ticket = st.text_area("Enter Ticket", placeholder="Paste your support ticket here...", height=120, label_visibility="collapsed")
+if st.button("Classify Ticket", use_container_width=True, type="primary"):
+    if user_ticket:
+        with st.spinner("Analyzing..."):
+            res = llm.invoke(template.format(ticket=user_ticket))
+            cat = res.content.strip().replace("Category:", "").strip()
+            st.markdown(f'<span class="badge {BADGE_CLASS.get(cat, "general")}">{cat}</span>', unsafe_allow_html=True)
+    else:
+        st.warning("Please enter a ticket first")
+st.markdown('</div>', unsafe_allow_html=True)
 
-with col1:
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
-    user_ticket = st.text_area("Enter Ticket", height=200, placeholder="Paste your support ticket here...")
-    classify = st.button("Classify Ticket")
-    
-    if classify:
-        if user_ticket:
-            with st.spinner("Analyzing..."):
-                response = llm.invoke(prompt_template.format(ticket=user_ticket))
-                category = response.content.strip().replace("Category:", "").strip()
-                css_class = COLOR_MAP.get(category, "general")
-                st.markdown(f'<div class="badge {css_class}">{category}</div>', unsafe_allow_html=True)
-        else:
-            st.warning("Please enter a ticket first")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-with col2:
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
-    st.subheader("Test All 10 Samples")
-    run_all = st.button("Run All Tickets")
-    
-    if run_all:
-        for i, t in enumerate(TICKETS, 1):
-            response = llm.invoke(prompt_template.format(ticket=t))
-            category = response.content.strip().replace("Category:", "").strip()
-            css_class = COLOR_MAP.get(category, "general")
-            st.markdown(f"**Ticket {i}**")
-            st.markdown(f'<div class="badge {css_class}">{category}</div>', unsafe_allow_html=True)
-            st.caption(t[:70] + "...")
-            st.write("")
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+st.subheader("Sample Tickets")
+if st.button("Run All 10 Tests", use_container_width=True):
+    for i, t in enumerate(TICKETS, 1):
+        res = llm.invoke(template.format(ticket=t))
+        cat = res.content.strip().replace("Category:", "").strip()
+        st.markdown(f"**Ticket {i}**")
+        st.markdown(f'<span class="badge {BADGE_CLASS.get(cat, "general")}">{cat}</span>', unsafe_allow_html=True)
+        st.caption(t)
+st.markdown('</div>', unsafe_allow_html=True)
