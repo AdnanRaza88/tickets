@@ -6,57 +6,52 @@ st.set_page_config(page_title="Ticket Classification", page_icon="📝", layout=
 
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
-.stApp {
-    background: #e6e9f2;
-    font-family: 'Sora', sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+html, body, [class*="st-"] {font-family: 'Poppins', sans-serif;}
+.stApp {background: #f1f5f9;}
+.block-container {padding-top: 2rem; padding-bottom: 2rem; max-width: 700px;}
+.main-container {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 32px 28px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
-.neuo-card {
-    background: #e6e9f2;
-    border-radius: 24px;
-    padding: 28px;
-    margin-bottom: 24px;
-    box-shadow: 12px 12px 24px #c8cbd4, -12px -12px 24px #ffffff;
-}
-h1 {color: #2d3748 !important; font-weight: 700; margin-bottom: 8px;}
-p, label, .stMarkdown {color: #4a5568 !important; font-weight: 400;}
+h1 {color: #1e293b !important; font-weight: 700; font-size: 1.8rem; margin:0;}
+p, label, .stMarkdown {color: #475569 !important; font-size: 0.95rem;}
 .stTextArea textarea {
-    background: #e6e9f2 !important;
-    border: none !important;
-    color: #2d3748 !important;
-    border-radius: 16px !important;
+    background: #f8fafc !important;
+    border: 1.5px solid #e2e8f0 !important;
+    color: #1e293b !important;
+    border-radius: 12px !important;
     font-size: 15px;
-    box-shadow: inset 6px 6px 12px #c8cbd4, inset -6px -6px 12px #ffffff !important;
 }
+.stTextArea textarea:focus {border-color: #6366f1 !important; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;}
 .stButton>button {
-    background: #e6e9f2;
-    color: #4a5568;
+    background: #6366f1;
+    color: white;
     border: none;
-    border-radius: 16px;
+    border-radius: 12px;
     font-weight: 600;
     width: 100%;
     padding: 0.8rem;
     font-size: 15px;
-    box-shadow: 8px 8px 16px #c8cbd4, -8px -8px 16px #ffffff;
-    transition: all 0.2s ease;
+    margin-top: 8px;
 }
-.stButton>button:active {
-    box-shadow: inset 4px 4px 8px #c8cbd4, inset -4px -4px 8px #ffffff;
-}
-.badge {
+.stButton>button:hover {background: #4f46e5;}
+hr {margin: 24px 0; border: none; border-top: 1px solid #e2e8f0;}
+.result-pill {
     display: inline-block;
     padding: 8px 18px;
     border-radius: 999px;
     font-weight: 700;
     font-size: 0.9rem;
     margin-top: 12px;
-    background: #e6e9f2;
-    box-shadow: inset 4px 4px 8px #c8cbd4, inset -4px -4px 8px #ffffff;
 }
-.billing {color: #059669;}
-.technical {color: #2563eb;}
-.account {color: #d97706;}
-.general {color: #7c3aed;}
+.billing {background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;}
+.technical {background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;}
+.account {background: #fffbeb; color: #92400e; border: 1px solid #fde68a;}
+.general {background: #f5f3ff; color: #5b21b6; border: 1px solid #c4b5fd;}
+.ticket-box {background: #f8fafc; border-radius: 12px; padding: 12px; margin-top: 8px; border-left: 4px solid #6366f1;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -88,32 +83,33 @@ TICKETS = [
 
 BADGE_MAP = {"Billing": "billing", "Technical Issue": "technical", "Account Access": "account", "General Inquiry": "general"}
 
-st.markdown('<div class="neuo-card">', unsafe_allow_html=True)
-st.title("📝 Ticket Classification")
-st.write("LangChain + Llama 3.1 with System Prompt for strict classification")
-st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
-st.markdown('<div class="neuo-card">', unsafe_allow_html=True)
-user_ticket = st.text_area("Enter Support Ticket", placeholder="Paste a ticket here...", height=130, label_visibility="collapsed")
-if st.button("Classify Ticket"):
+st.title("📝 Ticket Classification")
+st.write("LangChain + Llama 3.1 with System Prompt to prevent prompt injection")
+
+st.markdown("<hr>", unsafe_allow_html=True)
+
+user_ticket = st.text_area("Enter Support Ticket", placeholder="Paste a ticket here...", height=120, label_visibility="visible")
+if st.button("Classify Ticket", use_container_width=True):
     if user_ticket:
         with st.spinner("Classifying..."):
             chain = chat_prompt | llm
             res = chain.invoke({"ticket": user_ticket})
             category = res.content.strip().replace("Category:", "").strip()
-            st.markdown(f'<span class="badge {BADGE_MAP.get(category, "general")}">{category}</span>', unsafe_allow_html=True)
+            st.markdown(f'<span class="result-pill {BADGE_MAP.get(category, "general")}">{category}</span>', unsafe_allow_html=True)
     else:
         st.warning("Please enter a ticket")
-st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('<div class="neuo-card">', unsafe_allow_html=True)
+st.markdown("<hr>", unsafe_allow_html=True)
+
 st.subheader("Assignment: All 10 Sample Tickets")
-if st.button("Classify All 10 Tickets"):
+if st.button("Classify All 10 Tickets", use_container_width=True):
     for i, t in enumerate(TICKETS, 1):
         chain = chat_prompt | llm
         res = chain.invoke({"ticket": t})
         category = res.content.strip().replace("Category:", "").strip()
-        st.markdown(f"**Ticket {i}**")
-        st.markdown(f'<span class="badge {BADGE_MAP.get(category, "general")}">{category}</span>', unsafe_allow_html=True)
-        st.caption(t)
+        st.markdown(f"**Ticket {i}** <span class='result-pill {BADGE_MAP.get(category, 'general')}'>{category}</span>", unsafe_allow_html=True)
+        st.markdown(f'<div class="ticket-box">{t}</div>', unsafe_allow_html=True)
+
 st.markdown('</div>', unsafe_allow_html=True)
