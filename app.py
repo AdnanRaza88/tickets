@@ -80,7 +80,6 @@ BADGE_MAP = {"Billing": "billing", "Technical Issue": "technical", "Account Acce
 st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
 st.title("🎫 Ticket Classification")
-st.write("Using your `PromptTemplate` with Llama 3.1 via LangChain")
 
 st.markdown("<hr>", unsafe_allow_html=True)
 
@@ -88,7 +87,7 @@ user_ticket = st.text_area("Enter Your Support Ticket", placeholder="Paste a tic
 if st.button("Classify Ticket", use_container_width=True):
     if user_ticket:
         with st.spinner("Classifying..."):
-            prompt = template.format(ticket=user_ticket) # Tumhara wala logic
+            prompt = template.format(ticket=user_ticket) 
             response = llm.invoke(prompt)
             category = response.content.strip()
             st.markdown(f'<span class="result-pill {BADGE_MAP.get(category, "general")}">{category}</span>', unsafe_allow_html=True)
@@ -99,7 +98,7 @@ st.markdown("<hr>", unsafe_allow_html=True)
 
 st.subheader("Assignment: All 10 Sample Tickets")
 if st.button("Classify All 10 Tickets", use_container_width=True):
-    for i, ticket_text in enumerate(TICKETS, 1): # Tumhara wala for loop
+    for i, ticket_text in enumerate(TICKETS, 1): 
         prompt = template.format(ticket=ticket_text)
         response = llm.invoke(prompt)
         category = response.content.strip()
